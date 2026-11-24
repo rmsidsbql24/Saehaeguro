@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>안심 귀갓길 내비게이션</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+        }
+        body {
+            background-color: #1e293b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        /* 모바일 디바이스 프레임 */
+        .mobile-container {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 850px;
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 상단 검색 및 컨트롤 패널 */
+        .top-panel {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+        .header-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .header-title h1 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge {
+            font-size: 11px;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #334155;
+        }
+        .input-box span {
+            font-weight: 700;
+            margin-right: 8px;
+            font-size: 12px;
+        }
+        .dot-start { color: #2563eb; }
+        .dot-end { color: #e11d48; }
+        .input-box input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            outline: none;
+            font-size: 14px;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        /* 지도 영역 */
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-color: #e2e8f0;
+            position: relative;
+        }
+
+        /* 하단 안내 패널 */
+        .bottom-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: #ffffff;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.1);
+        }
+        .route-toggle {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .toggle-btn.active.safe {
+            border-color: #16a34a;
+            background: #f0fdf4;
+            color: #15803d;
+        }
+        .toggle-btn.active.short {
+            border-color: #ef4444;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+        .info-card {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .info-time {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .info-dist {
+            font-size: 13px;
+            color: #64748b;
+            margin-left: 6px;
+            font-weight: 500;
+        }
+        .cctv-count {
+            background: #2563eb;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+        .info-desc {
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.4;
+        }
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 14px;
+            background: #16a34a;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 긴급 신고 플로팅 버튼 */
+        .sos-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 245px;
+            z-index: 20;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            border: 3px solid white;
+            font-weight: 900;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    <!-- 상단 출발지/도착지 입력 UI -->
+    <div class="top-panel">
+        <div class="header-title">
+            <h1>🛡️ CCTV 안심 귀갓길</h1>
+            <span class="badge">안전경로 활성</span>
+        </div>
+        <div class="input-group">
+            <div class="input-box">
+                <span class="dot-start">● 출발</span>
+                <input type="text" id="start-input" value="학교 정문" readonly>
+            </div>
+            <div class="input-box">
+                <span class="dot-end">● 도착</span>
+                <input type="text" id="end-input" value="자택 (아파트 단지)" readonly>
+            </div>
+        </div>
+    </div>
+
+    <!-- 카카오 맵 영역 -->
+    <div id="map"></div>
+
+    <!-- SOS 긴급 버튼 -->
+    <button class="sos-btn" onclick="triggerSOS()">SOS</button>
+
+    <!-- 하단 경로 비교 및 안내 패널 -->
+    <div class="bottom-panel">
+        <div class="route-toggle">
+            <button class="toggle-btn active safe" id="btn-safe" onclick="selectRoute('safe')">
+                🛡️ CCTV 안심 경로
+            </button>
+            <button class="toggle-btn short" id="btn-short" onclick="selectRoute('short')">
+                ⚡ 최단 골목 (위험)
+            </button>
+        </div>
+
+        <div class="info-card">
+            <div class="info-row">
+                <div>
+                    <span class="info-time" id="route-time">14분</span>
+                    <span class="info-dist" id="route-dist">920m</span>
+                </div>
+                <span class="cctv-count" id="route-cctv">경로 내 CCTV 5대</span>
+            </div>
+            <p class="info-desc" id="route-desc">
+                방범용 CCTV 반경 이내의 밝은 대로변과 안심벨 설치 구역만을 연결하여 안내합니다.
+            </p>
+        </div>
+
+        <button class="action-btn" onclick="startNavigation()">안심 귀가 안내 시작하기</button>
+    </div>
+</div>
+
+<!-- 발급해주신 카카오 JS 키가 적용된 스크립트 -->
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7f2ffa998b7bd87d0bcf43d45a823a96&autoload=false"></script>
+
+<script>
+    let map;
+    let currentPolyline = null;
+
+    // 시연용 좌표 데이터 (인천 지역 기준 예시)
+    const START_POS = { lat: 37.4562557, lng: 126.7052062 }; 
+    const END_POS   = { lat: 37.4615000, lng: 126.7115000 }; 
+
+    // 방범 CCTV 위치 및 감시 구역 목록
+    const CCTV_LOCATIONS = [
+        { lat: 37.4565, lng: 126.7065 },
+        { lat: 37.4572, lng: 126.7082 },
+        { lat: 37.4585, lng: 126.7098 },
+        { lat: 37.4601, lng: 126.7108 },
+        { lat: 37.4612, lng: 126.7112 }
+    ];
+
+    const SAFE_ROUTE_COORDS = [
+        { lat: 37.4562557, lng: 126.7052062 },
+        { lat: 37.4565, lng: 126.7065 },
+        { lat: 37.4572, lng: 126.7082 },
+        { lat: 37.4585, lng: 126.7098 },
+        { lat: 37.4601, lng: 126.7108 },
+        { lat: 37.4615000, lng: 126.7115000 }
+    ];
+
+    const SHORT_ROUTE_COORDS = [
+        { lat: 37.4562557, lng: 126.7052062 },
+        { lat: 37.4590, lng: 126.7075 }, // CCTV 사각지대 골목
+        { lat: 37.4615000, lng: 126.7115000 }
+    ];
+
+    window.onload = function() {
+        if (typeof kakao !== 'undefined' && kakao.maps) {
+            kakao.maps.load(function() {
+                initKakaoMap();
+            });
+        }
+    };
+
+    function initKakaoMap() {
+        const container = document.getElementById('map');
+        const options = {
+            center: new kakao.maps.LatLng(37.4588, 126.7083),
+            level: 4
+        };
+        map = new kakao.maps.Map(container, options);
+
+        // 출발/도착 마커
+        new kakao.maps.Marker({ map: map, position: new kakao.maps.LatLng(START_POS.lat, START_POS.lng), title: '출발: 학교' });
+        new kakao.maps.Marker({ map: map, position: new kakao.maps.LatLng(END_POS.lat, END_POS.lng), title: '도착: 집' });
+
+        // CCTV 감시 반경(원) 및 아이콘 표시
+        CCTV_LOCATIONS.forEach(cctv => {
+            const pos = new kakao.maps.LatLng(cctv.lat, cctv.lng);
+            
+            const circle = new kakao.maps.Circle({
+                center: pos,
+                radius: 65,
+                strokeWeight: 1,
+                strokeColor: '#16a34a',
+                strokeOpacity: 0.8,
+                fillColor: '#22c55e',
+                fillOpacity: 0.25
+            });
+            circle.setMap(map);
+
+            const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📹 CCTV</div>`;
+            new kakao.maps.CustomOverlay({ map: map, position: pos, content: content, yAnchor: 1.5 });
+        });
+
+        drawRoute('safe');
+    }
+
+    function drawRoute(type) {
+        if (!map) return;
+        if (currentPolyline) currentPolyline.setMap(null);
+
+        const coords = type === 'safe' ? SAFE_ROUTE_COORDS : SHORT_ROUTE_COORDS;
+        const linePath = coords.map(c => new kakao.maps.LatLng(c.lat, c.lng));
+
+        currentPolyline = new kakao.maps.Polyline({
+            path: linePath,
+            strokeWeight: 7,
+            strokeColor: type === 'safe' ? '#16a34a' : '#ef4444',
+            strokeOpacity: 0.9,
+            strokeStyle: type === 'safe' ? 'solid' : 'shortdash'
+        });
+
+        currentPolyline.setMap(map);
+    }
+
+    function selectRoute(type) {
+        const btnSafe = document.getElementById('btn-safe');
+        const btnShort = document.getElementById('btn-short');
+        const timeEl = document.getElementById('route-time');
+        const distEl = document.getElementById('route-dist');
+        const cctvEl = document.getElementById('route-cctv');
+        const descEl = document.getElementById('route-desc');
+        const actionBtn = document.querySelector('.action-btn');
+
+        if (type === 'safe') {
+            btnSafe.classList.add('active');
+            btnShort.classList.remove('active');
+            timeEl.innerText = '14분';
+            distEl.innerText = '920m';
+            cctvEl.innerText = '경로 내 CCTV 5대';
+            cctvEl.style.background = '#2563eb';
+            descEl.innerText = '방범용 CCTV 반경 65m 이내의 밝은 대로변과 안심벨 설치 구역만을 연결하여 안내합니다.';
+            actionBtn.style.background = '#16a34a';
+            actionBtn.innerText = '안심 귀가 안내 시작하기';
+        } else {
+            btnShort.classList.add('active');
+            btnSafe.classList.remove('active');
+            timeEl.innerText = '10분';
+            distEl.innerText = '680m';
+            cctvEl.innerText = '경로 내 CCTV 0대 (주의)';
+            cctvEl.style.background = '#ef4444';
+            descEl.innerText = '⚠️ 경고: 가로등이 적고 CCTV 사각지대인 어두운 골목길이 포함되어 있습니다.';
+            actionBtn.style.background = '#ef4444';
+            actionBtn.innerText = '위험 경로로 안내 시작';
+        }
+
+        drawRoute(type);
+    }
+
+    function startNavigation() {
+        alert("🛡️ 실시간 위치 추적을 시작합니다.\nCCTV 안전 반경을 이탈할 경우 알림이 전송됩니다.");
+    }
+
+    function triggerSOS() {
+        alert("🚨 [긴급 SOS 발동]\n현재 위치와 가장 가까운 방범 CCTV 번호가 보호자 및 112 상황실에 전송되었습니다.");
+    }
+</script>
+
+</body>
+</html>
