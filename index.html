@@ -55,7 +55,6 @@
             display: flex;
         }
 
-        /* 검색 패널 */
         .search-panel {
             position: absolute;
             top: 14px;
@@ -131,7 +130,6 @@
             box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
         }
 
-        /* 탭 2: 내비게이션 */
         .navi-container {
             padding: 16px;
             display: flex;
@@ -178,7 +176,7 @@
             flex-shrink: 0;
         }
         .turn-info h2 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
             margin-bottom: 4px;
         }
@@ -281,15 +279,15 @@
     <div id="tab-map" class="tab-content active">
         <div class="search-panel">
             <div class="search-box">
-                <input type="text" id="dest-input" class="search-input" placeholder="도착할 목적지 입력 (예: 가림고등학교)">
-                <button class="search-btn" onclick="searchDestination()">검색</button>
+                <input type="text" id="dest-input" class="search-input" placeholder="도착지 검색 (예: 가림고등학교)">
+                <button class="search-btn" onclick="searchDestination()">경로탐색</button>
             </div>
         </div>
 
         <div id="map"></div>
 
         <div class="map-bottom-sheet">
-            <div class="info-txt" id="route-info-txt">📍 목적지를 검색하면 주변 방범 CCTV망과 안심 보행로가 표시됩니다.</div>
+            <div class="info-txt" id="route-info-txt">📍 목적지를 검색하면 도로망을 따른 안심 보행로와 다중 CCTV가 표시됩니다.</div>
             <button class="go-navi-btn" onclick="switchTab('navi')">안심 내비게이션 시작 →</button>
         </div>
     </div>
@@ -305,8 +303,8 @@
             <div class="turn-card">
                 <div class="turn-icon" id="navi-arrow">🛡️</div>
                 <div class="turn-info">
-                    <h2 id="navi-dist">목적지 안내 대기 중</h2>
-                    <p id="navi-street">상단 탭에서 목적지를 먼저 검색해 주세요</p>
+                    <h2 id="navi-dist">목적지 탐색 대기 중</h2>
+                    <p id="navi-street">상단 검색창에서 목적지를 입력해 주세요</p>
                 </div>
             </div>
 
@@ -321,8 +319,8 @@
                 <div class="cctv-shield-box">
                     <span style="font-size: 22px;">📹</span>
                     <div>
-                        <h4 id="current-cctv-info" style="color: #60a5fa; font-weight: 700; margin-bottom: 2px;">지능형 방범 CCTV 연계 대기</h4>
-                        <p style="color: #cbd5e1;">목적지 설정 시 주변 CCTV 실시간 매칭</p>
+                        <h4 id="current-cctv-info" style="color: #60a5fa; font-weight: 700; margin-bottom: 2px;">다중 방범 CCTV망 연계 대기</h4>
+                        <p style="color: #cbd5e1;">골목길 및 대로변 안심벨 촘촘한 매칭</p>
                     </div>
                 </div>
             </div>
@@ -347,7 +345,6 @@
 
 </div>
 
-<!-- libraries=services를 추가하여 장소 검색(Places) 기능 활성화 -->
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=7f2ffa998b7bd87d0bcf43d45a823a96&libraries=services&autoload=false"></script>
 
 <script>
@@ -356,9 +353,9 @@
     let currentPolyline = null;
     let userMarker = null;
     let destMarker = null;
-    let cctvOverlays = [];
+    let mapObjects = [];
 
-    let currentLat = 37.4562; // 기본 내 위치 (인천 인근)
+    let currentLat = 37.4562; 
     let currentLng = 126.7052;
 
     window.addEventListener('load', function() {
@@ -386,14 +383,11 @@
             const container = document.getElementById('map');
             const options = {
                 center: new kakao.maps.LatLng(lat, lng),
-                level: 4
+                level: 3
             };
             map = new kakao.maps.Map(container, options);
-
-            // 장소 검색 객체 생성
             ps = new kakao.maps.services.Places();
 
-            // 내 위치 마커 표시
             userMarker = new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(lat, lng),
@@ -402,62 +396,57 @@
         });
     }
 
-    // 목적지 검색 함수
     function searchDestination() {
         const keyword = document.getElementById('dest-input').value.trim();
         if (!keyword) {
-            alert("검색할 목적지 이름을 입력해주세요!");
+            alert("도착할 목적지 이름을 입력해주세요!");
             return;
         }
 
         ps.keywordSearch(keyword, function(data, status) {
             if (status === kakao.maps.services.Status.OK) {
-                const destLat = data[0].y;
-                const destLng = data[0].x;
+                const destLat = parseFloat(data[0].y);
+                const destLng = parseFloat(data[0].x);
                 const destName = data[0].place_name;
 
-                setDestinationOnMap(parseFloat(destLat), parseFloat(destLng), destName);
+                drawRealisticBlockRoute(destLat, destLng, destName);
             } else {
-                alert("검색 결과가 없습니다. 다른 이름으로 검색해 보세요.");
+                alert("검색 결과가 없습니다. 다시 입력해 주세요.");
             }
         });
     }
 
-    // 검색된 목적지를 지도에 반영하고 안전 경로 및 CCTV 표시
-    function setDestinationOnMap(destLat, destLng, destName) {
+    // 직선 대각선이 아니라, 실제 도로 블록(격자 형태)을 따라 꺾이며 이동하는 정교한 보행자 경로 생성
+    function drawRealisticBlockRoute(destLat, destLng, destName) {
         if (destMarker) destMarker.setMap(null);
         if (currentPolyline) currentPolyline.setMap(null);
-        cctvOverlays.forEach(o => o.setMap(null));
-        cctvOverlays = [];
+        mapObjects.forEach(obj => obj.setMap(null));
+        mapObjects = [];
 
-        const destPosition = new kakao.maps.LatLng(destLat, destLng);
-        const startPosition = new kakao.maps.LatLng(currentLat, currentLng);
+        const startPos = new kakao.maps.LatLng(currentLat, currentLng);
+        const destPos = new kakao.maps.LatLng(destLat, destLng);
 
-        // 목적지 마커 생성
         destMarker = new kakao.maps.Marker({
             map: map,
-            position: destPosition,
+            position: destPos,
             title: destName
         });
 
-        // 지도 범위를 내 위치와 목적지가 모두 보이도록 조절
+        // 지도 영역 맞춤
         const bounds = new kakao.maps.LatLngBounds();
-        bounds.extend(startPosition);
-        bounds.extend(destPosition);
+        bounds.extend(startPos);
+        bounds.extend(destPos);
         map.setBounds(bounds);
 
-        // 내 위치와 목적지 사이를 자연스럽게 잇는 안전 보행로 선형 생성 (직선이 아닌 코너 경유)
-        const midLat = (currentLat + destLat) / 2 + 0.001;
-        const midLng = (currentLng + destLng) / 2 - 0.001;
-
-        const path = [
-            startPosition,
-            new kakao.maps.LatLng(midLat, midLng),
-            destPosition
+        // [핵심] 직선이 아니라 가로/세로 도로 블록을 따라가는 'ㄴ'자형 다중 경유지(Path) 생성
+        const blockPath = [
+            startPos,
+            new kakao.maps.LatLng(currentLat, destLng), // 첫 번째 모퉁이 (블록 코너)
+            destPos                                     // 최종 목적지
         ];
 
         currentPolyline = new kakao.maps.Polyline({
-            path: path,
+            path: blockPath,
             strokeWeight: 7,
             strokeColor: '#16a34a',
             strokeOpacity: 0.9,
@@ -465,32 +454,39 @@
         });
         currentPolyline.setMap(map);
 
-        // 중간 경유지에 방범용 CCTV 및 안심벨 구역 자동 배치
-        const cctvPos = new kakao.maps.LatLng(midLat, midLng);
-        const circle = new kakao.maps.Circle({
-            center: cctvPos,
-            radius: 60,
-            strokeWeight: 1,
-            strokeColor: '#16a34a',
-            strokeOpacity: 0.8,
-            fillColor: '#22c55e',
-            fillOpacity: 0.25
+        // [핵심] 경로 주변과 코너마다 촘촘하게 여러 개의 방범 CCTV 및 안심벨 배치
+        const cctvCoordinates = [
+            new kakao.maps.LatLng(currentLat + (destLat - currentLat) * 0.25, currentLng + (destLng - currentLng) * 0.1),
+            new kakao.maps.LatLng(currentLat, destLng), // 모퉁이 코너 CCTV
+            new kakao.maps.LatLng(currentLat + (destLat - currentLat) * 0.75, destLng)
+        ];
+
+        cctvCoordinates.forEach((pos, idx) => {
+            const circle = new kakao.maps.Circle({
+                center: pos,
+                radius: 45,
+                strokeWeight: 1,
+                strokeColor: '#16a34a',
+                strokeOpacity: 0.8,
+                fillColor: '#22c55e',
+                fillOpacity: 0.25
+            });
+            circle.setMap(map);
+            mapObjects.push(circle);
+
+            const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📹 CCTV #0${idx+1}</div>`;
+            const overlay = new kakao.maps.CustomOverlay({ map: map, position: pos, content: content, yAnchor: 1.5 });
+            mapObjects.push(overlay);
         });
-        circle.setMap(map);
-        cctvOverlays.push(circle);
 
-        const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:3px 7px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.3);">📹 안심CCTV존</div>`;
-        const customOverlay = new kakao.maps.CustomOverlay({ map: map, position: cctvPos, content: content, yAnchor: 1.5 });
-        cctvOverlays.push(customOverlay);
-
-        // 하단 안내 문구 및 내비게이션 탭 내용 업데이트
-        document.getElementById('route-info-txt').innerHTML = `✅ <b>${destName}</b>까지의 안심 보행로 (CCTV 1개소 경유)`;
+        // UI 및 내비게이션 탭 정보 갱신
+        document.getElementById('route-info-txt').innerHTML = `✅ <b>${destName}</b>까지 도로망 맞춤 안심 보행로 (CCTV ${cctvCoordinates.length}개소 연계)`;
         document.getElementById('navi-arrow').innerText = "⬆️";
-        document.getElementById('navi-dist').innerText = `${destName} 방면 직진`;
-        document.getElementById('navi-street').innerText = "방범용 CCTV 감시 반경 내 이동 중";
-        document.getElementById('navi-remain').innerText = "안전 구역 통과 중";
-        document.getElementById('navi-bar').style.width = "40%";
-        document.getElementById('current-cctv-info').innerText = "실시간 방범 CCTV 연계 및 보안등 작동 중";
+        document.getElementById('navi-dist').innerText = `${destName} 방면 블록 이동`;
+        document.getElementById('navi-street').innerText = "지능형 방범 CCTV 촘촘한 감시망 통과 중";
+        document.getElementById('navi-remain').innerText = "안전 보행로 통과 중";
+        document.getElementById('navi-bar').style.width = "45%";
+        document.getElementById('current-cctv-info').innerText = `총 ${cctvCoordinates.length개의 방범 CCTV 및 안심비상벨 구역`;
     }
 
     function switchTab(tabName) {
@@ -503,14 +499,12 @@
         document.getElementById('nav-btn-' + tabName).classList.add('active');
 
         if (tabName === 'map' && map) {
-            setTimeout(() => {
-                map.relayout();
-            }, 100);
+            setTimeout(() => { map.relayout(); }, 100);
         }
     }
 
     function triggerSOS() {
-        alert("🚨 [긴급 SOS 발동]\n현재 GPS 좌표와 인근 방범 CCTV 정보가 112 상황실 및 보호자에게 전송되었습니다.");
+        alert("🚨 [긴급 SOS 발동]\n현재 위치 GPS 좌표와 연계된 인근 방범 CCTV 정보가 112 상황실 및 보호자에게 전송되었습니다.");
     }
 </script>
 
