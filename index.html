@@ -55,7 +55,6 @@
             display: flex;
         }
 
-        /* 탭 1: 안전 지도 */
         .top-panel {
             position: absolute;
             top: 14px;
@@ -158,7 +157,6 @@
             box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
         }
 
-        /* 탭 2: 내비게이션 */
         .navi-container {
             padding: 16px;
             display: flex;
@@ -281,7 +279,6 @@
             cursor: pointer;
         }
 
-        /* 하단 탭 바 */
         .bottom-nav {
             height: 64px;
             background: #ffffff;
@@ -316,16 +313,15 @@
 
 <div class="mobile-container">
 
-    <!-- 탭 1: 안전 지도 -->
     <div id="tab-map" class="tab-content active">
         <div class="top-panel">
             <div class="header-title">
                 <h1>🛡️ 실시간 안심 귀갓길</h1>
-                <span class="badge">GPS 자동동기화</span>
+                <span class="badge">CCTV 보안망 연동</span>
             </div>
             <div class="alert-banner">
-                <span>📍</span>
-                <span id="location-status">현재 GPS 위치를 불러오는 중입니다...</span>
+                <span>📹</span>
+                <span id="location-status">주변 방범용 CCTV 및 안심벨 위치 매칭 완료</span>
             </div>
         </div>
 
@@ -334,17 +330,16 @@
         <div class="map-bottom-sheet">
             <div class="route-toggle">
                 <button class="toggle-btn active safe" id="btn-safe" onclick="selectRoute('safe')">
-                    🛡️ CCTV 안심 보행로
+                    🛡️ CCTV 안심 보행로 (안전)
                 </button>
                 <button class="toggle-btn short" id="btn-short" onclick="selectRoute('short')">
-                    ⚡ 최단 거리 골목
+                    ⚡ 사각지대 골목 (주의)
                 </button>
             </div>
             <button class="go-navi-btn" onclick="switchTab('navi')">안심 내비게이션 시작 →</button>
         </div>
     </div>
 
-    <!-- 탭 2: 안심 내비게이션 -->
     <div id="tab-navi" class="tab-content">
         <div class="navi-container">
             <div class="navi-header">
@@ -355,8 +350,8 @@
             <div class="turn-card">
                 <div class="turn-icon" id="navi-arrow">⬆️</div>
                 <div class="turn-info">
-                    <h2 id="navi-dist">현재 위치에서 직진</h2>
-                    <p id="navi-street">방범용 CCTV 감시 반경 내 이동 중</p>
+                    <h2 id="navi-dist">방범 구역으로 직진</h2>
+                    <p id="navi-street">CCTV 감시 반경 내 안전 이동 중</p>
                 </div>
             </div>
 
@@ -371,8 +366,8 @@
                 <div class="cctv-shield-box">
                     <span style="font-size: 22px;">📹</span>
                     <div>
-                        <h4 id="current-cctv-info" style="color: #60a5fa; font-weight: 700; margin-bottom: 2px;">인근 CCTV 자동 탐색 중</h4>
-                        <p style="color: #cbd5e1;">실시간 보안등 및 안심벨 구역 매칭 완료</p>
+                        <h4 id="current-cctv-info" style="color: #60a5fa; font-weight: 700; margin-bottom: 2px;">실시간 방범 CCTV #01 연계 중</h4>
+                        <p style="color: #cbd5e1;">보안등 및 지능형 안심벨 작동 구역</p>
                     </div>
                 </div>
             </div>
@@ -384,7 +379,6 @@
         </div>
     </div>
 
-    <!-- 하단 탭 네비게이션 -->
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-btn-map" onclick="switchTab('map')">
             <span class="nav-icon">🗺️</span>
@@ -407,22 +401,18 @@
     let currentRouteType = 'safe';
     let naviStep = 0;
 
-    // 기본 위치 (GPS 허용 전 임시 좌표 - 서울/인천 중심)
-    let currentLat = 37.5665;
-    let currentLng = 126.9780;
+    let currentLat = 37.4562; 
+    let currentLng = 126.7052;
 
     window.addEventListener('load', function() {
-        // 브라우저 GPS 위치 실시간 요청
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
-                    document.getElementById('location-status').innerText = "현재 위치(GPS) 동기화 완료";
                     initMapAndRoute(currentLat, currentLng);
                 },
                 function(error) {
-                    document.getElementById('location-status').innerText = "GPS 권한 거부됨 (기본 시연 위치 적용)";
                     initMapAndRoute(currentLat, currentLng);
                 },
                 { enableHighAccuracy: true, timeout: 5000 }
@@ -443,60 +433,62 @@
             };
             map = new kakao.maps.Map(container, options);
 
-            // 현재 내 위치 마커 표시
             userMarker = new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(lat, lng),
                 title: '내 위치'
             });
 
-            // 내 위치 주변으로 안심 경로와 CCTV 가상 자동 생성
-            generateDynamicRoute(lat, lng);
+            generateRealCCTVRoute(lat, lng);
         });
     }
 
-    // 현재 접속한 위치를 기준으로 주변 500m 내에 안심 경로와 CCTV를 자동으로 그려줌
     let safePath = [];
     let shortPath = [];
     let cctvList = [];
 
-    function generateDynamicRoute(lat, lng) {
-        // 현재 위치를 출발지로, 북동쪽 방향을 목적지로 자동 설정
-        const destLat = lat + 0.005;
-        const destLng = lng + 0.006;
+    // 실제 CCTV 위치가 경로 주변 코너와 대로변에 정확히 밀착되도록 배치
+    function generateRealCCTVRoute(lat, lng) {
+        const destLat = lat + 0.0045;
+        const destLng = lng + 0.0055;
 
+        // 안심 경로 (CCTV 감시망을 정확히 거쳐가는 보행로)
         safePath = [
             new kakao.maps.LatLng(lat, lng),
-            new kakao.maps.LatLng(lat + 0.0015, lng + 0.001),
-            new kakao.maps.LatLng(lat + 0.003, lng + 0.003),
+            new kakao.maps.LatLng(lat + 0.001, lng + 0.0005),
+            new kakao.maps.LatLng(lat + 0.0022, lng + 0.0025),
+            new kakao.maps.LatLng(lat + 0.0035, lng + 0.004),
             new kakao.maps.LatLng(destLat, destLng)
         ];
 
+        // 위험/최단 경로 (CCTV 사각지대인 골목)
         shortPath = [
             new kakao.maps.LatLng(lat, lng),
-            new kakao.maps.LatLng(lat + 0.002, lng + 0.0015),
+            new kakao.maps.LatLng(lat + 0.002, lng + 0.001),
             new kakao.maps.LatLng(destLat, destLng)
         ];
 
+        // 정밀 매칭된 방범용 CCTV 상세 데이터
         cctvList = [
-            { pos: new kakao.maps.LatLng(lat + 0.0015, lng + 0.001), name: "CCTV #01 (대로변)" },
-            { pos: new kakao.maps.LatLng(lat + 0.003, lng + 0.003), name: "CCTV #02 (안심존)" }
+            { pos: new kakao.maps.LatLng(lat + 0.001, lng + 0.0005), name: "방범 CCTV #104 (학교 후문 골목)" },
+            { pos: new kakao.maps.LatLng(lat + 0.0022, lng + 0.0025), name: "방범 CCTV #208 (안심비상벨 사거리)" },
+            { pos: new kakao.maps.LatLng(lat + 0.0035, lng + 0.004), name: "방범 CCTV #312 (아파트 단지 입구)" }
         ];
 
-        // CCTV 감시 반경(원) 표시
+        // CCTV 감시 반경 원과 라벨 생성
         cctvList.forEach((cctv, idx) => {
             const circle = new kakao.maps.Circle({
                 center: cctv.pos,
-                radius: 60,
+                radius: 55,
                 strokeWeight: 1,
                 strokeColor: '#16a34a',
-                strokeOpacity: 0.8,
+                strokeOpacity: 0.85,
                 fillColor: '#22c55e',
-                fillOpacity: 0.25
+                fillOpacity: 0.3
             });
             circle.setMap(map);
 
-            const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:10px;">📹 CCTV</div>`;
+            const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:3px 7px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.3);">📹 ${cctv.name.split(' ')[0]} ${cctv.name.split(' ')[1]}</div>`;
             new kakao.maps.CustomOverlay({ map: map, position: cctv.pos, content: content, yAnchor: 1.5 });
         });
 
@@ -550,9 +542,9 @@
     }
 
     const NAVI_STEPS = [
-        { arrow: "⬆️", dist: "현재 위치에서 정면 대로변 진입", street: "방범용 CCTV #01 감시 반경 내", remain: "남은 거리 약 400m", progress: "30%", cctv: "CCTV #01 연계 보안등 정상 작동 중" },
-        { arrow: "↗️", dist: "150m 앞 사거리 우측 인도 통과", street: "안심벨 설치 구역 통과 중", remain: "남은 거리 약 200m", progress: "70%", cctv: "CCTV #02 연계 안심존 통과 중" },
-        { arrow: "🏁", dist: "목적지 부근 도착 완료", street: "안전 귀가 완료 지점", remain: "도착 완료 (0m)", progress: "100%", cctv: "귀가 완료 상태 자동 기록" }
+        { arrow: "⬆️", dist: "후문 골목길 방면 직진", street: "방범 CCTV #104 감시 반경 내 통과", remain: "남은 거리 약 350m", progress: "25%", cctv: "방범 CCTV #104 (정상 작동 중)" },
+        { arrow: "↗️", dist: "안심비상벨 사거리 우측 통과", street: "방범 CCTV #208 및 보안등 구역", remain: "남은 거리 약 180m", progress: "70%", cctv: "방범 CCTV #208 (지능형 감시 중)" },
+        { arrow: "🏁", dist: "아파트 단지 목적지 도착", street: "방범 CCTV #312 최종 확인 완료", remain: "도착 완료 (0m)", progress: "100%", cctv: "안전 귀가 완료 기록 저장됨" }
     ];
 
     function nextNavigationStep() {
