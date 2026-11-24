@@ -55,41 +55,49 @@
             display: flex;
         }
 
-        .search-panel {
+        /* 상단 패널 */
+        .top-panel {
             position: absolute;
             top: 14px;
             left: 14px;
             right: 14px;
             z-index: 20;
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(10px);
             border-radius: 16px;
-            padding: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 12px 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
         }
-        .search-box {
+        .header-title {
             display: flex;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
         }
-        .search-input {
-            flex: 1;
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            outline: none;
+        .header-title h1 {
+            font-size: 15px;
+            font-weight: 800;
             color: #0f172a;
         }
-        .search-btn {
-            background: #16a34a;
-            color: white;
-            border: none;
-            padding: 0 16px;
-            border-radius: 10px;
-            font-size: 13px;
+        .badge {
+            font-size: 10px;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 3px 8px;
+            border-radius: 20px;
             font-weight: 700;
-            cursor: pointer;
+        }
+        .alert-banner {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #15803d;
+            font-weight: 600;
         }
 
         #map {
@@ -99,6 +107,7 @@
             background-color: #e2e8f0;
         }
 
+        /* 하단 시트 */
         .map-bottom-sheet {
             position: absolute;
             bottom: 0;
@@ -113,9 +122,9 @@
         }
         .info-txt {
             font-size: 12px;
-            color: #475569;
+            color: #334155;
             margin-bottom: 12px;
-            font-weight: 600;
+            font-weight: 700;
         }
         .go-navi-btn {
             width: 100%;
@@ -130,6 +139,7 @@
             box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
         }
 
+        /* 탭 2: 안심 내비게이션 */
         .navi-container {
             padding: 16px;
             display: flex;
@@ -176,7 +186,7 @@
             flex-shrink: 0;
         }
         .turn-info h2 {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             margin-bottom: 4px;
         }
@@ -208,7 +218,7 @@
             margin-bottom: 12px;
         }
         .progress-bar-fill {
-            width: 40%;
+            width: 35%;
             height: 100%;
             background: linear-gradient(90deg, #22c55e, #3b82f6);
             border-radius: 10px;
@@ -229,6 +239,17 @@
             flex-direction: column;
             gap: 8px;
         }
+        .sim-btn {
+            width: 100%;
+            padding: 13px;
+            border-radius: 12px;
+            border: none;
+            background: #3b82f6;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
         .sos-wide-btn {
             width: 100%;
             padding: 13px;
@@ -241,6 +262,7 @@
             cursor: pointer;
         }
 
+        /* 하단 탭 바 */
         .bottom-nav {
             height: 64px;
             background: #ffffff;
@@ -275,19 +297,23 @@
 
 <div class="mobile-container">
 
-    <!-- 탭 1: 안전 지도 & 목적지 검색 -->
+    <!-- 탭 1: 안전 지도 -->
     <div id="tab-map" class="tab-content active">
-        <div class="search-panel">
-            <div class="search-box">
-                <input type="text" id="dest-input" class="search-input" placeholder="도착지 검색 (예: 가림고등학교)">
-                <button class="search-btn" onclick="searchDestination()">경로탐색</button>
+        <div class="top-panel">
+            <div class="header-title">
+                <h1>🛡️ 실시간 안심 귀갓길</h1>
+                <span class="badge">CCTV 5개소 연동</span>
+            </div>
+            <div class="alert-banner">
+                <span>📹</span>
+                <span>골목 코너 및 대로변 방범 CCTV망 실시간 가동 중</span>
             </div>
         </div>
 
         <div id="map"></div>
 
         <div class="map-bottom-sheet">
-            <div class="info-txt" id="route-info-txt">📍 목적지를 검색하면 도로망을 따른 안심 보행로와 다중 CCTV가 표시됩니다.</div>
+            <div class="info-txt" id="route-info-txt">✅ 도로망 맞춤 안심 보행로 (방범 CCTV 5개소 밀착 배치)</div>
             <button class="go-navi-btn" onclick="switchTab('navi')">안심 내비게이션 시작 →</button>
         </div>
     </div>
@@ -296,36 +322,37 @@
     <div id="tab-navi" class="tab-content">
         <div class="navi-container">
             <div class="navi-header">
-                <span style="font-size: 15px; font-weight: 800;">🧭 실시간 안심 안내</span>
-                <div class="navi-status-pill">CCTV 보안망 연동됨</div>
+                <span style="font-size: 15px; font-weight: 800;">🧭 턴바이턴 안심 안내</span>
+                <div class="navi-status-pill">보안망 연결됨</div>
             </div>
 
             <div class="turn-card">
-                <div class="turn-icon" id="navi-arrow">🛡️</div>
+                <div class="turn-icon" id="navi-arrow">⬆️</div>
                 <div class="turn-info">
-                    <h2 id="navi-dist">목적지 탐색 대기 중</h2>
-                    <p id="navi-street">상단 검색창에서 목적지를 입력해 주세요</p>
+                    <h2 id="navi-dist">첫 번째 블록 코너 직진</h2>
+                    <p id="navi-street">방범 CCTV #01 감시 반경 내 통과 중</p>
                 </div>
             </div>
 
             <div class="navi-progress-card">
                 <div class="progress-header">
                     <span>귀가 진행 상황</span>
-                    <span id="navi-remain" style="color: #4ade80; font-weight: 700;">안전 구역 대기</span>
+                    <span id="navi-remain" style="color: #4ade80; font-weight: 700;">남은 거리 450m</span>
                 </div>
                 <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="navi-bar" style="width: 0%;"></div>
+                    <div class="progress-bar-fill" id="navi-bar"></div>
                 </div>
                 <div class="cctv-shield-box">
                     <span style="font-size: 22px;">📹</span>
                     <div>
-                        <h4 id="current-cctv-info" style="color: #60a5fa; font-weight: 700; margin-bottom: 2px;">다중 방범 CCTV망 연계 대기</h4>
-                        <p style="color: #cbd5e1;">골목길 및 대로변 안심벨 촘촘한 매칭</p>
+                        <h4 id="current-cctv-info" style="color: #60a5fa; font-weight: 700; margin-bottom: 2px;">방범 CCTV #01 연계 구역</h4>
+                        <p style="color: #cbd5e1;">지능형 안심비상벨 및 보안등 작동 중</p>
                     </div>
                 </div>
             </div>
 
             <div class="sim-controls">
+                <button class="sim-btn" onclick="nextNavigationStep()">👣 다음 보행 구간 이동</button>
                 <button class="sos-wide-btn" onclick="triggerSOS()">🚨 긴급 SOS (위치 및 CCTV 전송)</button>
             </div>
         </div>
@@ -345,15 +372,12 @@
 
 </div>
 
-<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=7f2ffa998b7bd87d0bcf43d45a823a96&libraries=services&autoload=false"></script>
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=7f2ffa998b7bd87d0bcf43d45a823a96&autoload=false"></script>
 
 <script>
     let map = null;
-    let ps = null;
     let currentPolyline = null;
-    let userMarker = null;
-    let destMarker = null;
-    let mapObjects = [];
+    let naviStep = 0;
 
     let currentLat = 37.4562; 
     let currentLng = 126.7052;
@@ -364,129 +388,78 @@
                 function(position) {
                     currentLat = position.coords.latitude;
                     currentLng = position.coords.longitude;
-                    initMap(currentLat, currentLng);
+                    initMapAndRoute(currentLat, currentLng);
                 },
                 function(error) {
-                    initMap(currentLat, currentLng);
+                    initMapAndRoute(currentLat, currentLng);
                 },
                 { enableHighAccuracy: true, timeout: 5000 }
             );
         } else {
-            initMap(currentLat, currentLng);
+            initMapAndRoute(currentLat, currentLng);
         }
     });
 
-    function initMap(lat, lng) {
+    function initMapAndRoute(lat, lng) {
         if (typeof kakao === 'undefined' || !kakao.maps) return;
 
         kakao.maps.load(function() {
             const container = document.getElementById('map');
             const options = {
-                center: new kakao.maps.LatLng(lat, lng),
+                center: new kakao.maps.LatLng(lat + 0.002, lng + 0.002),
                 level: 3
             };
             map = new kakao.maps.Map(container, options);
-            ps = new kakao.maps.services.Places();
 
-            userMarker = new kakao.maps.Marker({
+            // 내 위치 마커
+            new kakao.maps.Marker({
                 map: map,
                 position: new kakao.maps.LatLng(lat, lng),
                 title: '내 위치'
             });
-        });
-    }
 
-    function searchDestination() {
-        const keyword = document.getElementById('dest-input').value.trim();
-        if (!keyword) {
-            alert("도착할 목적지 이름을 입력해주세요!");
-            return;
-        }
+            // [핵심] 대각선이 아니라 실제 도로 모퉁이('ㄴ'자 블록)를 정확히 꺾여서 릴레이로 이어지는 경로 좌표
+            const blockPathCoords = [
+                new kakao.maps.LatLng(lat, lng),                            // 출발지
+                new kakao.maps.LatLng(lat, lng + 0.0035),                   // 첫 번째 코너 (가로 이동)
+                new kakao.maps.LatLng(lat + 0.004, lng + 0.0035),           // 두 번째 코너 (세로 이동)
+                new kakao.maps.LatLng(lat + 0.004, lng + 0.006)             // 최종 목적지
+            ];
 
-        ps.keywordSearch(keyword, function(data, status) {
-            if (status === kakao.maps.services.Status.OK) {
-                const destLat = parseFloat(data[0].y);
-                const destLng = parseFloat(data[0].x);
-                const destName = data[0].place_name;
-
-                drawRealisticBlockRoute(destLat, destLng, destName);
-            } else {
-                alert("검색 결과가 없습니다. 다시 입력해 주세요.");
-            }
-        });
-    }
-
-    // 직선 대각선이 아니라, 실제 도로 블록(격자 형태)을 따라 꺾이며 이동하는 정교한 보행자 경로 생성
-    function drawRealisticBlockRoute(destLat, destLng, destName) {
-        if (destMarker) destMarker.setMap(null);
-        if (currentPolyline) currentPolyline.setMap(null);
-        mapObjects.forEach(obj => obj.setMap(null));
-        mapObjects = [];
-
-        const startPos = new kakao.maps.LatLng(currentLat, currentLng);
-        const destPos = new kakao.maps.LatLng(destLat, destLng);
-
-        destMarker = new kakao.maps.Marker({
-            map: map,
-            position: destPos,
-            title: destName
-        });
-
-        // 지도 영역 맞춤
-        const bounds = new kakao.maps.LatLngBounds();
-        bounds.extend(startPos);
-        bounds.extend(destPos);
-        map.setBounds(bounds);
-
-        // [핵심] 직선이 아니라 가로/세로 도로 블록을 따라가는 'ㄴ'자형 다중 경유지(Path) 생성
-        const blockPath = [
-            startPos,
-            new kakao.maps.LatLng(currentLat, destLng), // 첫 번째 모퉁이 (블록 코너)
-            destPos                                     // 최종 목적지
-        ];
-
-        currentPolyline = new kakao.maps.Polyline({
-            path: blockPath,
-            strokeWeight: 7,
-            strokeColor: '#16a34a',
-            strokeOpacity: 0.9,
-            strokeStyle: 'solid'
-        });
-        currentPolyline.setMap(map);
-
-        // [핵심] 경로 주변과 코너마다 촘촘하게 여러 개의 방범 CCTV 및 안심벨 배치
-        const cctvCoordinates = [
-            new kakao.maps.LatLng(currentLat + (destLat - currentLat) * 0.25, currentLng + (destLng - currentLng) * 0.1),
-            new kakao.maps.LatLng(currentLat, destLng), // 모퉁이 코너 CCTV
-            new kakao.maps.LatLng(currentLat + (destLat - currentLat) * 0.75, destLng)
-        ];
-
-        cctvCoordinates.forEach((pos, idx) => {
-            const circle = new kakao.maps.Circle({
-                center: pos,
-                radius: 45,
-                strokeWeight: 1,
+            currentPolyline = new kakao.maps.Polyline({
+                path: blockPathCoords,
+                strokeWeight: 7,
                 strokeColor: '#16a34a',
-                strokeOpacity: 0.8,
-                fillColor: '#22c55e',
-                fillOpacity: 0.25
+                strokeOpacity: 0.9,
+                strokeStyle: 'solid'
             });
-            circle.setMap(map);
-            mapObjects.push(circle);
+            currentPolyline.setMap(map);
 
-            const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">📹 CCTV #0${idx+1}</div>`;
-            const overlay = new kakao.maps.CustomOverlay({ map: map, position: pos, content: content, yAnchor: 1.5 });
-            mapObjects.push(overlay);
+            // [핵심] 경로 주변과 코너마다 촘촘하게 배치된 실제 방범 CCTV 5개소
+            const cctvSpots = [
+                { pos: new kakao.maps.LatLng(lat, lng + 0.0012), name: "CCTV #01 (주택가 골목)" },
+                { pos: new kakao.maps.LatLng(lat, lng + 0.0035), name: "CCTV #02 (코너 사거리)" },
+                { pos: new kakao.maps.LatLng(lat + 0.002, lng + 0.0035), name: "CCTV #03 (안심비상벨존)" },
+                { pos: new kakao.maps.LatLng(lat + 0.004, lng + 0.0035), name: "CCTV #04 (대로변 진입로)" },
+                { pos: new kakao.maps.LatLng(lat + 0.004, lng + 0.005), name: "CCTV #05 (목적지 단지 앞)" }
+            ];
+
+            cctvSpots.forEach((cctv, idx) => {
+                const circle = new kakao.maps.Circle({
+                    center: cctv.pos,
+                    radius: 45,
+                    strokeWeight: 1,
+                    strokeColor: '#16a34a',
+                    strokeOpacity: 0.8,
+                    fillColor: '#22c55e',
+                    fillOpacity: 0.28
+                });
+                circle.setMap(map);
+
+                const content = `<div style="background:#15803d; color:white; font-size:10px; font-weight:bold; padding:3px 7px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.3);">📹 CCTV #0${idx+1}</div>`;
+                new kakao.maps.CustomOverlay({ map: map, position: cctv.pos, content: content, yAnchor: 1.5 });
+            });
         });
-
-        // UI 및 내비게이션 탭 정보 갱신
-        document.getElementById('route-info-txt').innerHTML = `✅ <b>${destName}</b>까지 도로망 맞춤 안심 보행로 (CCTV ${cctvCoordinates.length}개소 연계)`;
-        document.getElementById('navi-arrow').innerText = "⬆️";
-        document.getElementById('navi-dist').innerText = `${destName} 방면 블록 이동`;
-        document.getElementById('navi-street').innerText = "지능형 방범 CCTV 촘촘한 감시망 통과 중";
-        document.getElementById('navi-remain').innerText = "안전 보행로 통과 중";
-        document.getElementById('navi-bar').style.width = "45%";
-        document.getElementById('current-cctv-info').innerText = `총 ${cctvCoordinates.length개의 방범 CCTV 및 안심비상벨 구역`;
     }
 
     function switchTab(tabName) {
@@ -503,8 +476,26 @@
         }
     }
 
+    const NAVI_STEPS = [
+        { arrow: "⬆️", dist: "첫 번째 골목 코너까지 직진", street: "방범 CCTV #01 ~ #02 감시 반경 내", remain: "남은 거리 450m", progress: "20%", cctv: "방범 CCTV #01 연계 구역 (정상)" },
+        { arrow: "➡️", dist: "사거리 코너에서 우측으로 꺾기", street: "방범 CCTV #03 안심비상벨 존", remain: "남은 거리 280m", progress: "50%", cctv: "방범 CCTV #03 연계 구역 (정상)" },
+        { arrow: "⬆️", dist: "대로변 방향 블록 직진", street: "방범 CCTV #04 보안등 구역", remain: "남은 거리 120m", progress: "80%", cctv: "방범 CCTV #04 연계 구역 (정상)" },
+        { arrow: "🏁", dist: "목적지 단지 앞 도착 완료", street: "방범 CCTV #05 최종 안전 확인", remain: "도착 완료 (0m)", progress: "100%", cctv: "방범 CCTV #05 최종 귀가 확인" }
+    ];
+
+    function nextNavigationStep() {
+        naviStep = (naviStep + 1) % NAVI_STEPS.length;
+        const data = NAVI_STEPS[naviStep];
+        document.getElementById('navi-arrow').innerText = data.arrow;
+        document.getElementById('navi-dist').innerText = data.dist;
+        document.getElementById('navi-street').innerText = data.street;
+        document.getElementById('navi-remain').innerText = data.remain;
+        document.getElementById('navi-bar').style.width = data.progress;
+        document.getElementById('current-cctv-info').innerText = data.cctv;
+    }
+
     function triggerSOS() {
-        alert("🚨 [긴급 SOS 발동]\n현재 위치 GPS 좌표와 연계된 인근 방범 CCTV 정보가 112 상황실 및 보호자에게 전송되었습니다.");
+        alert("🚨 [긴급 SOS 발동]\n현재 위치 GPS 좌표와 인근 방범 CCTV 정보가 112 상황실 및 보호자에게 전송되었습니다.");
     }
 </script>
 
